@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Aura — Smart Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --bg-primary: #0b0d17;
+      --bg-secondary: #111327;
+      --bg-card: #161936;
+      --bg-card-hover: #1c2045;
+      --bg-input: #1a1d3a;
+      --border-color: rgba(255,255,255,0.06);
+      --border-light: rgba(255,255,255,0.1);
+      --text-primary: #f0f0f5;
+      --text-secondary: #9ca3c0;
+      --text-muted: #5c6080;
+      --accent: #6c63ff;
+      --accent-light: #8b83ff;
+      --accent-glow: rgba(108,99,255,0.3);
+      --green: #22c55e;
+      --green-bg: rgba(34,197,94,0.12);
+      --orange: #f59e0b;
+      --orange-bg: rgba(245,158,11,0.12);
+      --blue: #3b82f6;
+      --blue-bg: rgba(59,130,246,0.12);
+      --purple: #8b5cf6;
+      --purple-bg: rgba(139,92,246,0.12);
+      --red: #ef4444;
+      --red-bg: rgba(239,68,68,0.12);
+      --sidebar-width: 260px;
+      --topbar-height: 64px;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    html { scroll-behavior:smooth; }
+    body { font-family:'Inter',sans-serif; background:var(--bg-primary); color:var(--text-primary); min-height:100vh; display:flex; overflow-x:hidden; }
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:3px; }
+    ::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.2); }
+
+    /* SIDEBAR */
+    .sidebar { position:fixed; top:0; left:0; width:var(--sidebar-width); height:100vh; background:var(--bg-secondary); border-right:1px solid var(--border-color); display:flex; flex-direction:column; z-index:100; transition:transform var(--transition); }
+    .sidebar-header { padding:20px 20px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border-color); }
+    .sidebar-logo { display:flex; align-items:center; gap:10px; color:var(--accent-light); }
+    .sidebar-title { font-size:1.2rem; font-weight:600; background:linear-gradient(135deg,var(--accent-light),var(--purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .sidebar-close { display:none; background:none; border:none; color:var(--text-secondary); cursor:pointer; padding:4px; border-radius:6px; transition:background var(--transition); }
+    .sidebar-close:hover { background:rgba(255,255,255,0.05); }
+    .sidebar-nav { flex:1; padding:12px 10px; overflow-y:auto; }
+    .nav-item { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:var(--radius-sm); color:var(--text-secondary); text-decoration:none; font-size:0.9rem; font-weight:400; transition:all var(--transition); margin-bottom:2px; }
+    .nav-item:hover { background:rgba(255,255,255,0.04); color:var(--text-primary); }
+    .nav-item.active { background:linear-gradient(135deg,rgba(108,99,255,0.15),rgba(139,92,246,0.08)); color:var(--accent-light); font-weight:500; }
+    .nav-item.active .iconify { color:var(--accent-light); }
+    .nav-divider { height:1px; background:var(--border-color); margin:10px 14px; }
+    .admin-item { color:var(--orange); }
+    .admin-item:hover { color:var(--orange); background:rgba(245,158,11,0.06); }
+    .admin-item.active { background:rgba(245,158,11,0.1); color:var(--orange); }
+    .sidebar-footer { padding:16px; border-top:1px solid var(--border-color); }
+    .user-card { display:flex; align-items:center; gap:10px; }
+    .user-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--purple)); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:0.85rem; flex-shrink:0; }
+    .user-info { display:flex; flex-direction:column; }
+    .user-name { font-size:0.85rem; font-weight:500; color:var(--text-primary); }
+    .user-role { font-size:0.72rem; color:var(--text-muted); }
+    .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99; backdrop-filter:blur(4px); }
+
+    /* MAIN */
+    .main-content { flex:1; margin-left:var(--sidebar-width); min-height:100vh; display:flex; flex-direction:column; }
+
+    /* TOPBAR */
+    .topbar { position:sticky; top:0; height:var(--topbar-height); display:flex; align-items:center; justify-content:space-between; padding:0 24px; background:rgba(11,13,23,0.85); backdrop-filter:blur(16px); border-bottom:1px solid var(--border-color); z-index:50; }
+    .topbar-left { display:flex; align-items:center; gap:16px; }
+    .menu-toggle { display:none; background:none; border:none; color:var(--text-secondary); cursor:pointer; padding:4px; border-radius:6px; }
+    .menu-toggle:hover { color:var(--text-primary); }
+    .page-title { font-size:1.15rem; font-weight:600; }
+    .topbar-right { display:flex; align-items:center; gap:12px; }
+    .notif-btn { position:relative; background:none; border:none; color:var(--text-secondary); cursor:pointer; padding:8px; border-radius:50%; transition:background var(--transition); }
+    .notif-btn:hover { background:rgba(255,255,255,0.05); color:var(--text-primary); }
+    .notif-badge { position:absolute; top:4px; right:4px; width:16px; height:16px; background:var(--red); color:#fff; font-size:0.6rem; font-weight:700; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+    .topbar-avatar { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--purple)); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:0.8rem; cursor:pointer; }
+
+    /* PAGES */
+    .pages-container { flex:1; padding:24px; position:relative; }
+    .page { display:none; animation:fadeIn 0.35s ease; }
+    .page.active { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+
+    /* DASHBOARD */
+    .greeting h1 { font-size:1.75rem; font-weight:600; margin-bottom:4px; }
+    .greeting p { color:var(--text-secondary); font-size:0.9rem; }
+    .gradient-text { background:linear-gradient(135deg,var(--accent-light),var(--purple),#f472b6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:24px; }
+    .stat-card { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:20px; transition:all var(--transition); }
+    .stat-card:hover { border-color:var(--border-light); background:var(--bg-card-hover); transform:translateY(-2px); }
+    .stat-icon { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+    .stat-icon.blue { background:var(--blue-bg); color:var(--blue); }
+    .stat-icon.green { background:var(--green-bg); color:var(--green); }
+    .stat-icon.orange { background:var(--orange-bg); color:var(--orange); }
+    .stat-icon.purple { background:var(--purple-bg); color:var(--purple); }
+    .stat-value { font-size:1.8rem; font-weight:700; line-height:1; margin-bottom:4px; }
+    .stat-label { font-size:0.82rem; color:var(--text-muted); font-weight:400; }
+    .dashboard-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-top:20px; }
+    .card { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:20px; }
+    .card h3 { font-size:0.95rem; font-weight:600; margin-bottom:16px; color:var(--text-secondary); }
+    .completion-card { display:flex; flex-direction:column; align-items:center; }
+    .completion-circle { position:relative; width:130px; height:130px; margin:8px 0 12px; }
+    .completion-circle svg { width:100%; height:100%; transform:rotate(-90deg); }
+    .circle-bg { fill:none; stroke:rgba(255,255,255,0.05); stroke-width:8; }
+    .circle-fill { fill:none; stroke:url(#circleGrad); stroke-width:8; stroke-linecap:round; stroke-dasharray:326.73; stroke-dashoffset:0; transition:stroke-dashoffset 1.5s ease; }
+    .completion-text { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1.6rem; font-weight:700; }
+    .completion-sub { font-size:0.82rem; color:var(--green); }
+    .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 16px; text-align:center; color:var(--text-muted); }
+    .empty-state .iconify { margin-bottom:12px; opacity:0.4; }
+    .empty-state p { font-size:0.9rem; color:var(--text-secondary); margin-bottom:4px; }
+    .empty-state span { font-size:0.78rem; }
+    .announcement-item { display:flex; gap:12px; align-items:flex-start; }
+    .ann-icon { width:36px; height:36px; border-radius:8px; background:var(--purple-bg); color:var(--purple); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .ann-content strong { display:block; font-size:0.9rem; margin-bottom:2px; }
+    .ann-content p { font-size:0.82rem; color:var(--text-secondary); margin-bottom:4px; }
+    .ann-time { font-size:0.72rem; color:var(--text-muted); }
+
+    /* PAGE COMMON */
+    .page h2 { font-size:1.5rem; font-weight:600; }
+    .subtitle { color:var(--text-muted); font-size:0.85rem; margin-top:2px; }
+    .page-header-row { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px; }
+
+    /* BUTTONS */
+    .btn-primary { background:linear-gradient(135deg,var(--accent),var(--purple)); color:#fff; border:none; padding:10px 20px; border-radius:var(--radius-sm); font-family:inherit; font-size:0.85rem; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all var(--transition); box-shadow:0 4px 15px var(--accent-glow); }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 25px var(--accent-glow); }
+    .btn-sm { padding:7px 14px; font-size:0.8rem; }
+    .btn-icon { padding:10px; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; }
+
+    /* FILTER TABS */
+    .filter-tabs { display:flex; gap:4px; margin-bottom:20px; background:var(--bg-card); border-radius:var(--radius-sm); padding:4px; width:fit-content; }
+    .filter-tab { background:none; border:none; color:var(--text-muted); padding:8px 16px; border-radius:6px; font-family:inherit; font-size:0.82rem; font-weight:500; cursor:pointer; transition:all var(--transition); }
+    .filter-tab:hover { color:var(--text-secondary); }
+    .filter-tab.active { background:var(--accent); color:#fff; box-shadow:0 2px 10px var(--accent-glow); }
+
+    /* ASSIGNMENTS */
+    .assignments-list { display:flex; flex-direction:column; gap:10px; }
+    .assignment-item { display:flex; align-items:center; gap:14px; padding:16px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); transition:all var(--transition); }
+    .assignment-item:hover { border-color:var(--border-light); background:var(--bg-card-hover); }
+    .assignment-status { flex-shrink:0; }
+    .assignment-item.completed .assignment-status { color:var(--green); }
+    .assignment-item.pending .assignment-status { color:var(--orange); }
+    .assignment-info { flex:1; }
+    .assignment-info h4 { font-size:0.92rem; font-weight:500; margin-bottom:2px; }
+    .assignment-info p { font-size:0.8rem; color:var(--text-secondary); }
+    .assignment-date { font-size:0.72rem; color:var(--text-muted); }
+    .assignment-delete { background:none; border:none; color:var(--text-muted); cursor:pointer; padding:6px; border-radius:6px; transition:all var(--transition); }
+    .assignment-delete:hover { color:var(--red); background:var(--red-bg); }
+
+    /* NOTES */
+    .notes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+    .note-card { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:18px; transition:all var(--transition); cursor:default; }
+    .note-card:hover { border-color:var(--border-light); background:var(--bg-card-hover); transform:translateY(-2px); }
+    .note-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .note-header h4 { font-size:0.95rem; font-weight:600; }
+    .note-delete { background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px; border-radius:4px; transition:all var(--transition); }
+    .note-delete:hover { color:var(--red); background:var(--red-bg); }
+    .note-content { font-size:0.82rem; color:var(--text-secondary); line-height:1.5; margin-bottom:12px; }
+    .note-date { font-size:0.72rem; color:var(--text-muted); }
+
+    /* TIMETABLE */
+    .timetable-wrapper { overflow-x:auto; margin-top:16px; border-radius:var(--radius); border:1px solid var(--border-color); }
+    .timetable { width:100%; border-collapse:collapse; min-width:600px; }
+    .timetable th { background:var(--bg-card); padding:12px 16px; font-size:0.8rem; font-weight:600; color:var(--text-secondary); text-align:center; border-bottom:1px solid var(--border-color); }
+    .timetable td { padding:8px 6px; text-align:center; border-bottom:1px solid var(--border-color); vertical-align:middle; }
+    .time-cell { font-size:0.78rem; font-weight:600; color:var(--text-muted); background:var(--bg-secondary); white-space:nowrap; width:60px; }
+    .tt-subject { display:inline-block; padding:6px 10px; border-radius:6px; font-size:0.75rem; font-weight:500; text-align:center; }
+    .tt-subject.math { background:rgba(99,102,241,0.15); color:#818cf8; }
+    .tt-subject.phys { background:rgba(59,130,246,0.15); color:#60a5fa; }
+    .tt-subject.chem { background:rgba(34,197,94,0.15); color:#4ade80; }
+    .tt-subject.eng { background:rgba(245,158,11,0.15); color:#fbbf24; }
+    .tt-subject.cs { background:rgba(139,92,246,0.15); color:#a78bfa; }
+    .lunch-cell { font-size:0.82rem; color:var(--text-muted); background:var(--bg-secondary); }
+    .empty-cell { color:var(--text-muted); font-size:0.82rem; }
+
+    /* ANNOUNCEMENTS PAGE */
+    .announcements-list { display:flex; flex-direction:column; gap:12px; margin-top:16px; }
+    .announcement-card { display:flex; gap:16px; padding:20px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); transition:all var(--transition); }
+    .announcement-card:hover { border-color:var(--border-light); background:var(--bg-card-hover); }
+    .ann-card-icon { width:48px; height:48px; border-radius:12px; background:var(--purple-bg); color:var(--purple); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .ann-card-body h3 { font-size:1rem; font-weight:600; margin-bottom:4px; }
+    .ann-card-body p { font-size:0.85rem; color:var(--text-secondary); margin-bottom:8px; }
+    .ann-card-time { display:flex; align-items:center; gap:4px; font-size:0.75rem; color:var(--text-muted); }
+
+    /* TUTORIALS */
+    .tutorials-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; }
+    .tutorial-card { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:20px; text-align:center; transition:all var(--transition); cursor:pointer; }
+    .tutorial-card:hover { border-color:var(--border-light); background:var(--bg-card-hover); transform:translateY(-3px); }
+    .tutorial-card.hidden { display:none; }
+    .tut-icon { width:56px; height:56px; border-radius:14px; background:var(--accent-glow); color:var(--accent-light); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; }
+    .tutorial-card h4 { font-size:0.92rem; font-weight:600; margin-bottom:6px; }
+    .tutorial-card p { font-size:0.78rem; color:var(--text-secondary); margin-bottom:12px; line-height:1.4; }
+    .tut-tag { display:inline-block; padding:4px 10px; background:var(--blue-bg); color:var(--blue); font-size:0.7rem; font-weight:500; border-radius:20px; }
+
+    /* REWARDS */
+    .credit-card { background:linear-gradient(135deg,rgba(108,99,255,0.15),rgba(139,92,246,0.08)); border:1px solid rgba(108,99,255,0.2); border-radius:var(--radius); padding:28px; text-align:center; margin-bottom:20px; }
+    .credit-label { font-size:0.78rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; font-weight:500; margin-bottom:8px; }
+    .credit-value { font-size:3rem; font-weight:700; background:linear-gradient(135deg,var(--accent-light),#f472b6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1.1; }
+    .credit-sub { font-size:0.78rem; color:var(--text-muted); margin-bottom:12px; }
+    .credit-earn { font-size:0.8rem; color:var(--text-secondary); max-width:320px; margin:0 auto; line-height:1.5; }
+    .reward-content { margin-top:16px; }
+
+    /* LOST & FOUND */
+    #lfContent { margin-top:16px; }
+    .lf-item { display:flex; gap:14px; padding:16px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); margin-bottom:10px; transition:all var(--transition); }
+    .lf-item:hover { border-color:var(--border-light); }
+    .lf-type-badge { padding:4px 10px; border-radius:20px; font-size:0.7rem; font-weight:600; text-transform:uppercase; flex-shrink:0; height:fit-content; }
+    .lf-type-badge.lost { background:var(--red-bg); color:var(--red); }
+    .lf-type-badge.found { background:var(--green-bg); color:var(--green); }
+    .lf-body h4 { font-size:0.9rem; font-weight:600; margin-bottom:4px; }
+    .lf-body p { font-size:0.8rem; color:var(--text-secondary); margin-bottom:4px; }
+    .lf-body .lf-location { font-size:0.72rem; color:var(--text-muted); display:flex; align-items:center; gap:4px; }
+
+    /* CHAT */
+    .chat-container { display:flex; flex-direction:column; height:calc(100vh - var(--topbar-height) - 120px); margin-top:16px; border:1px solid var(--border-color); border-radius:var(--radius); overflow:hidden; background:var(--bg-card); }
+    .chat-messages { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:16px; }
+    .chat-msg { display:flex; gap:10px; align-items:flex-end; }
+    .chat-msg.sent { flex-direction:row-reverse; }
+    .chat-avatar { width:32px; height:32px; border-radius:50%; background:var(--purple-bg); color:var(--purple); display:flex; align-items:center; justify-content:center; font-size:0.72rem; font-weight:600; flex-shrink:0; }
+    .chat-bubble { max-width:65%; padding:10px 14px; border-radius:14px; font-size:0.85rem; line-height:1.5; }
+    .chat-msg.received .chat-bubble { background:var(--bg-input); border-bottom-left-radius:4px; }
+    .chat-msg.sent .chat-bubble { background:linear-gradient(135deg,var(--accent),var(--purple)); color:#fff; border-bottom-right-radius:4px; }
+    .chat-time { font-size:0.68rem; color:var(--text-muted); margin-top:4px; }
+    .chat-msg.sent .chat-time { text-align:right; }
+    .chat-input-row { display:flex; gap:10px; padding:14px 16px; border-top:1px solid var(--border-color); background:var(--bg-secondary); }
+    .chat-input-row input { flex:1; background:var(--bg-input); border:1px solid var(--border-color); border-radius:20px; padding:10px 16px; color:var(--text-primary); font-family:inherit; font-size:0.85rem; outline:none; transition:border-color var(--transition); }
+    .chat-input-row input:focus { border-color:var(--accent); }
+
+    /* MODAL */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); z-index:200; align-items:center; justify-content:center; padding:20px; }
+    .modal-overlay.active { display:flex; }
+    .modal { background:var(--bg-secondary); border:1px solid var(--border-light); border-radius:var(--radius); width:100%; max-width:420px; padding:24px; animation:modalIn 0.3s ease; }
+    @keyframes modalIn { from{opacity:0;transform:scale(0.95) translateY(10px);} to{opacity:1;transform:scale(1) translateY(0);} }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .modal-header h3 { font-size:1.1rem; font-weight:600; }
+    .modal-close { background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px; border-radius:6px; transition:all var(--transition); }
+    .modal-close:hover { color:var(--text-primary); background:rgba(255,255,255,0.05); }
+    .form-group { margin-bottom:16px; }
+    .form-group label { display:block; font-size:0.82rem; font-weight:500; color:var(--text-secondary); margin-bottom:6px; }
+    .form-group input, .form-group textarea, .form-group select { width:100%; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:10px 14px; color:var(--text-primary); font-family:inherit; font-size:0.85rem; outline:none; transition:border-color var(--transition); resize:vertical; }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color:var(--accent); }
+    .form-group select { cursor:pointer; }
+    .form-group select option { background:var(--bg-secondary); }
+
+    /* SMARTBOT FAB */
+    .smartbot-fab { position:fixed; bottom:24px; right:24px; width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--purple)); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 20px var(--accent-glow); transition:all var(--transition); z-index:150; }
+    .smartbot-fab:hover { transform:scale(1.1); box-shadow:0 6px 30px var(--accent-glow); }
+    .smartbot-fab.hidden { display:none; }
+
+    /* SMARTBOT PANEL */
+    .smartbot-panel { position:fixed; bottom:24px; right:24px; width:360px; max-height:480px; background:var(--bg-secondary); border:1px solid var(--border-light); border-radius:16px; display:none; flex-direction:column; z-index:151; box-shadow:0 20px 50px rgba(0,0,0,0.4); animation:slideUp 0.3s ease; overflow:hidden; }
+    .smartbot-panel.active { display:flex; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+    .smartbot-header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--border-color); background:var(--bg-card); }
+    .smartbot-title { display:flex; align-items:center; gap:8px; font-weight:600; font-size:0.92rem; color:var(--accent-light); }
+    .smartbot-close { background:none; border:none; color:var(--text-muted); cursor:pointer; padding:2px; border-radius:6px; transition:all var(--transition); }
+    .smartbot-close:hover { color:var(--text-primary); }
+    .smartbot-messages { flex:1; padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; max-height:300px; }
+    .bot-msg { background:var(--bg-input); border-radius:12px; padding:10px 14px; max-width:85%; font-size:0.85rem; line-height:1.5; border-bottom-left-radius:4px; }
+    .bot-msg.user-msg { background:linear-gradient(135deg,var(--accent),var(--purple)); color:#fff; align-self:flex-end; border-bottom-left-radius:12px; border-bottom-right-radius:4px; }
+    .bot-suggestions { display:flex; flex-wrap:wrap; gap:6px; }
+    .bot-suggestion { background:var(--bg-card); border:1px solid var(--border-light); color:var(--text-secondary); padding:6px 12px; border-radius:20px; font-family:inherit; font-size:0.72rem; cursor:pointer; transition:all var(--transition); }
+    .bot-suggestion:hover { background:var(--accent-glow); border-color:var(--accent); color:var(--accent-light); }
+    .smartbot-input-row { display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--border-color); }
+    .smartbot-input-row input { flex:1; background:var(--bg-input); border:1px solid var(--border-color); border-radius:20px; padding:8px 14px; color:var(--text-primary); font-family:inherit; font-size:0.82rem; outline:none; transition:border-color var(--transition); }
+    .smartbot-input-row input:focus { border-color:var(--accent); }
+
+    /* TOAST */
+    .toast-container { position:fixed; top:80px; right:24px; z-index:300; display:flex; flex-direction:column; gap:8px; }
+    .toast { background:var(--bg-card); border:1px solid var(--border-light); border-radius:var(--radius-sm); padding:12px 18px; font-size:0.82rem; color:var(--text-primary); box-shadow:0 10px 30px rgba(0,0,0,0.3); animation:toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards; display:flex; align-items:center; gap:8px; }
+    .toast.success { border-left:3px solid var(--green); }
+    .toast.error { border-left:3px solid var(--red); }
+    .toast.info { border-left:3px solid var(--blue); }
+    @keyframes toastIn { from{opacity:0;transform:translateX(20px);} to{opacity:1;transform:translateX(0);} }
+    @keyframes toastOut { from{opacity:1;transform:translateX(0);} to{opacity:0;transform:translateX(20px);} }
+
+    /* RESPONSIVE */
+    @media (max-width:1024px) {
+      .stats-grid { grid-template-columns:repeat(2,1fr); }
+      .dashboard-grid { grid-template-columns:1fr; }
+    }
+    @media (max-width:768px) {
+      .sidebar { transform:translateX(-100%); }
+      .sidebar.open { transform:translateX(0); }
+      .sidebar-overlay.active { display:block; }
+      .sidebar-close { display:block; }
+      .menu-toggle { display:block; }
+      .main-content { margin-left:0; }
+      .pages-container { padding:16px; }
+      .stats-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+      .stat-card { padding:14px; }
+      .stat-value { font-size:1.4rem; }
+      .greeting h1 { font-size:1.3rem; }
+      .smartbot-panel { width:calc(100% - 32px); right:16px; bottom:16px; max-height:420px; }
+      .chat-container { height:calc(100vh - var(--topbar-height) - 160px); }
+    }
+    @media (max-width:480px) {
+      .stats-grid { grid-template-columns:1fr 1fr; gap:8px; }
+      .stat-card { padding:12px; }
+      .topbar { padding:0 14px; }
+      .notes-grid { grid-template-columns:1fr; }
+      .tutorials-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <span class="iconify" data-icon="mdi:atom-variant" data-width="28"></span>
+        <span class="sidebar-title">Smart Hub</span>
+      </div>
+      <button class="sidebar-close" id="sidebarClose">
+        <span class="iconify" data-icon="mdi:close" data-width="22"></span>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-page="dashboard">
+        <span class="iconify" data-icon="mdi:view-dashboard-outline" data-width="20"></span>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" data-page="assignments">
+        <span class="iconify" data-icon="mdi:clipboard-text-outline" data-width="20"></span>
+        <span>Assignments</span>
+      </a>
+      <a href="#" class="nav-item" data-page="notes">
+        <span class="iconify" data-icon="mdi:notebook-outline" data-width="20"></span>
+        <span>Notes</span>
+      </a>
+      <a href="#" class="nav-item" data-page="timetable">
+        <span class="iconify" data-icon="mdi:calendar-clock-outline" data-width="20"></span>
+        <span>Timetable</span>
+      </a>
+      <a href="#" class="nav-item" data-page="announcements">
+        <span class="iconify" data-icon="mdi:bullhorn-outline" data-width="20"></span>
+        <span>Announcements</span>
+      </a>
+      <a href="#" class="nav-item" data-page="tutorials">
+        <span class="iconify" data-icon="mdi:school-outline" data-width="20"></span>
+        <span>Tutorials</span>
+      </a>
+      <a href="#" class="nav-item" data-page="rewards">
+        <span class="iconify" data-icon="mdi:gift-outline" data-width="20"></span>
+        <span>Rewards</span>
+      </a>
+      <a href="#" class="nav-item" data-page="lostfound">
+        <span class="iconify" data-icon="mdi:map-marker-question-outline" data-width="20"></span>
+        <span>Lost & Found</span>
+      </a>
+      <a href="#" class="nav-item" data-page="chat">
+        <span class="iconify" data-icon="mdi:chat-outline" data-width="20"></span>
+        <span>Chat</span>
+      </a>
+      <div class="nav-divider"></div>
+      <a href="#" class="nav-item admin-item" data-page="admin">
+        <span class="iconify" data-icon="mdi:shield-crown-outline" data-width="20"></span>
+        <span>Admin Panel</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">N</div>
+        <div class="user-info">
+          <span class="user-name">Nandakanuga</span>
+          <span class="user-role">Student</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle">
+          <span class="iconify" data-icon="mdi:menu" data-width="24"></span>
+        </button>
+        <h2 class="page-title" id="pageTitle">Dashboard</h2>
+      </div>
+      <div class="topbar-right">
+        <button class="notif-btn" id="notifBtn">
+          <span class="iconify" data-icon="mdi:bell-outline" data-width="22"></span>
+          <span class="notif-badge">1</span>
+        </button>
+        <div class="topbar-avatar">N</div>
+      </div>
+    </header>
+
+    <div class="pages-container">
+      <!-- DASHBOARD -->
+      <section class="page active" id="page-dashboard">
+        <div class="greeting">
+          <h1>Good Evening, <span class="gradient-text">Nandakanuga</span></h1>
+          <p>Here's your academic overview</p>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue"><span class="iconify" data-icon="mdi:file-document-multiple-outline" data-width="24"></span></div>
+            <div class="stat-value">1</div>
+            <div class="stat-label">Total</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange"><span class="iconify" data-icon="mdi:clock-outline" data-width="24"></span></div>
+            <div class="stat-value">0</div>
+            <div class="stat-label">Pending</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><span class="iconify" data-icon="mdi:check-circle-outline" data-width="24"></span></div>
+            <div class="stat-value">1</div>
+            <div class="stat-label">Completed</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple"><span class="iconify" data-icon="mdi:bullhorn-outline" data-width="24"></span></div>
+            <div class="stat-value">1</div>
+            <div class="stat-label">Notices</div>
+          </div>
+        </div>
+        <div class="dashboard-grid">
+          <div class="card completion-card">
+            <h3>Completion Rate</h3>
+            <div class="completion-circle">
+              <svg viewBox="0 0 120 120">
+                <defs>
+                  <linearGradient id="circleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#6c63ff"/>
+                    <stop offset="100%" stop-color="#22c55e"/>
+                  </linearGradient>
+                </defs>
+                <circle cx="60" cy="60" r="52" class="circle-bg"/>
+                <circle cx="60" cy="60" r="52" class="circle-fill"/>
+              </svg>
+              <span class="completion-text">100%</span>
+            </div>
+            <p class="completion-sub">All tasks completed!</p>
+          </div>
+          <div class="card deadlines-card">
+            <h3>Upcoming Deadlines</h3>
+            <div class="empty-state">
+              <span class="iconify" data-icon="mdi:calendar-check" data-width="48"></span>
+              <p>No upcoming deadlines</p>
+              <span>You're all caught up!</span>
+            </div>
+          </div>
+          <div class="card announcements-card">
+            <h3>Recent Announcements</h3>
+            <div class="announcement-item">
+              <div class="ann-icon"><span class="iconify" data-icon="mdi:megaphone" data-width="18"></span></div>
+              <div class="ann-content">
+                <strong>konnect 2k26</strong>
+                <p>fest in our college</p>
+                <span class="ann-time">About 1 month ago</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ASSIGNMENTS -->
+      <section class="page" id="page-assignments">
+        <div class="page-header-row">
+          <div>
+            <h2>Assignments</h2>
+            <p class="subtitle" id="assSubtitle">0 pending · 1 completed</p>
+          </div>
+          <button class="btn-primary btn-sm" id="addAssignmentBtn">
+            <span class="iconify" data-icon="mdi:plus" data-width="18"></span> New
+          </button>
+        </div>
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all">All</button>
+          <button class="filter-tab" data-filter="pending">Pending</button>
+          <button class="filter-tab" data-filter="completed">Completed</button>
+        </div>
+        <div class="assignments-list" id="assignmentsList">
+          <div class="assignment-item completed" data-status="completed">
+            <div class="assignment-status">
+              <span class="iconify" data-icon="mdi:check-circle" data-width="22"></span>
+            </div>
+            <div class="assignment-info">
+              <h4>Software - developer</h4>
+              <p>Medium SE</p>
+              <span class="assignment-date">2026-04-30</span>
+            </div>
+            <button class="assignment-delete" title="Delete">
+              <span class="iconify" data-icon="mdi:delete-outline" data-width="18"></span>
+            </button>
+          </div>
+        </div>
+        <div class="modal-overlay" id="assignmentModal">
+          <div class="modal">
+            <div class="modal-header">
+              <h3>New Assignment</h3>
+              <button class="modal-close" data-close="assignmentModal">
+                <span class="iconify" data-icon="mdi:close" data-width="20"></span>
+              </button>
+            </div>
+            <form id="assignmentForm">
+              <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="assTitle" placeholder="Assignment title" required/>
+              </div>
+              <div class="form-group">
+                <label>Subject</label>
+                <input type="text" id="assSubject" placeholder="e.g. Medium SE"/>
+              </div>
+              <div class="form-group">
+                <label>Due Date</label>
+                <input type="date" id="assDate" required/>
+              </div>
+              <button type="submit" class="btn-primary" style="width:100%">Add Assignment</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- NOTES -->
+      <section class="page" id="page-notes">
+        <div class="page-header-row">
+          <div>
+            <h2>Notes</h2>
+            <p class="subtitle" id="notesCount">1 notes saved</p>
+          </div>
+          <button class="btn-primary btn-sm" id="addNoteBtn">
+            <span class="iconify" data-icon="mdi:plus" data-width="18"></span> New Note
+          </button>
+        </div>
+        <div class="notes-grid" id="notesGrid">
+          <div class="note-card">
+            <div class="note-header">
+              <h4>cursor</h4>
+              <button class="note-delete" title="Delete">
+                <span class="iconify" data-icon="mdi:delete-outline" data-width="16"></span>
+              </button>
+            </div>
+            <p class="note-content">dbms experiment 10<br/>DocScanner Dec 26, 2025 1-06 PM(1).pdf</p>
+            <span class="note-date">02/04/2026</span>
+          </div>
+        </div>
+        <div class="modal-overlay" id="noteModal">
+          <div class="modal">
+            <div class="modal-header">
+              <h3>New Note</h3>
+              <button class="modal-close" data-close="noteModal">
+                <span class="iconify" data-icon="mdi:close" data-width="20"></span>
+              </button>
+            </div>
+            <form id="noteForm">
+              <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="noteTitle" placeholder="Note title" required/>
+              </div>
+              <div class="form-group">
+                <label>Content</label>
+                <textarea id="noteContent" rows="4" placeholder="Write your note..." required></textarea>
+              </div>
+              <button type="submit" class="btn-primary" style="width:100%">Save Note</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- TIMETABLE -->
+      <section class="page" id="page-timetable">
+        <h2>Timetable</h2>
+        <p class="subtitle">Weekly schedule</p>
+        <div class="timetable-wrapper">
+          <table class="timetable">
+            <thead>
+              <tr><th>Time</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="time-cell">9:00</td>
+                <td><div class="tt-subject math">Mathematics</div></td>
+                <td><div class="tt-subject chem">Chemistry</div></td>
+                <td><div class="tt-subject phys">Physics</div></td>
+                <td><div class="tt-subject eng">English</div></td>
+                <td><div class="tt-subject cs">CS</div></td>
+              </tr>
+              <tr>
+                <td class="time-cell">10:00</td>
+                <td><div class="tt-subject phys">Physics</div></td>
+                <td><div class="tt-subject math">Mathematics</div></td>
+                <td><div class="tt-subject eng">English</div></td>
+                <td><div class="tt-subject chem">Chemistry</div></td>
+                <td><div class="tt-subject math">Mathematics</div></td>
+              </tr>
+              <tr>
+                <td class="time-cell">11:00</td>
+                <td><div class="tt-subject eng">English</div></td>
+                <td><div class="tt-subject cs">CS</div></td>
+                <td><div class="tt-subject chem">Chemistry</div></td>
+                <td><div class="tt-subject cs">CS</div></td>
+                <td><div class="tt-subject phys">Physics</div></td>
+              </tr>
+              <tr>
+                <td class="time-cell">12:00</td>
+                <td colspan="5" class="lunch-cell">🍽️ Lunch Break</td>
+              </tr>
+              <tr>
+                <td class="time-cell">13:00</td>
+                <td><div class="tt-subject cs">CS Lab</div></td>
+                <td><div class="tt-subject phys">Physics Lab</div></td>
+                <td><div class="tt-subject math">Mathematics</div></td>
+                <td><div class="tt-subject eng">English</div></td>
+                <td><div class="tt-subject chem">Chemistry</div></td>
+              </tr>
+              <tr>
+                <td class="time-cell">14:00</td>
+                <td><div class="tt-subject cs">CS Lab</div></td>
+                <td><div class="tt-subject phys">Physics Lab</div></td>
+                <td><div class="tt-subject cs">CS</div></td>
+                <td><div class="tt-subject math">Mathematics</div></td>
+                <td><div class="tt-subject eng">English</div></td>
+              </tr>
+              <tr>
+                <td class="time-cell">15:00</td>
+                <td><div class="tt-subject chem">Chemistry</div></td>
+                <td><div class="tt-subject eng">English</div></td>
+                <td><div class="tt-subject phys">Physics</div></td>
+                <td><div class="tt-subject cs">CS Lab</div></td>
+                <td><div class="tt-subject cs">CS Lab</div></td>
+              </tr>
+              <tr>
+                <td class="time-cell">16:00</td>
+                <td colspan="5" class="empty-cell">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ANNOUNCEMENTS -->
+      <section class="page" id="page-announcements">
+        <h2>Announcements</h2>
+        <p class="subtitle">Latest updates</p>
+        <div class="announcements-list">
+          <div class="announcement-card">
+            <div class="ann-card-icon">
+              <span class="iconify" data-icon="mdi:megaphone" data-width="28"></span>
+            </div>
+            <div class="ann-card-body">
+              <h3>konnect 2k26</h3>
+              <p>fest in our college</p>
+              <span class="ann-card-time">
+                <span class="iconify" data-icon="mdi:clock-outline" data-width="14"></span>
+                About 1 month ago
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TUTORIALS -->
+      <section class="page" id="page-tutorials">
+        <h2>Tutorial Hub</h2>
+        <p class="subtitle">Resources and learning materials</p>
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-tut-filter="all">All</button>
+          <button class="filter-tab" data-tut-filter="coding">Coding</button>
+          <button class="filter-tab" data-tut-filter="exams">Exams</button>
+        </div>
+        <div class="tutorials-grid" id="tutorialsGrid">
+          <div class="tutorial-card" data-cat="coding">
+            <div class="tut-icon"><span class="iconify" data-icon="mdi:language-python" data-width="32"></span></div>
+            <h4>Python Basics</h4>
+            <p>Learn Python from scratch</p>
+            <span class="tut-tag">Coding</span>
+          </div>
+          <div class="tutorial-card" data-cat="coding">
+            <div class="tut-icon"><span class="iconify" data-icon="mdi:language-javascript" data-width="32"></span></div>
+            <h4>JavaScript Essentials</h4>
+            <p>Modern JS for web development</p>
+            <span class="tut-tag">Coding</span>
+          </div>
+          <div class="tutorial-card" data-cat="exams">
+            <div class="tut-icon"><span class="iconify" data-icon="mdi:file-document-check-outline" data-width="32"></span></div>
+            <h4>Exam Prep Guide</h4>
+            <p>Tips and strategies for exams</p>
+            <span class="tut-tag">Exams</span>
+          </div>
+          <div class="tutorial-card" data-cat="coding">
+            <div class="tut-icon"><span class="iconify" data-icon="mdi:database-outline" data-width="32"></span></div>
+            <h4>SQL & Databases</h4>
+            <p>Database management fundamentals</p>
+            <span class="tut-tag">Coding</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- REWARDS -->
+      <section class="page" id="page-rewards">
+        <h2>Rewards</h2>
+        <p class="subtitle">Earn credits and redeem rewards</p>
+        <div class="credit-card">
+          <div class="credit-label">YOUR CREDIT BALANCE</div>
+          <div class="credit-value">15</div>
+          <div class="credit-sub">lifetime earned: 15</div>
+          <p class="credit-earn">Earn points by completing assignments, attending events, and helping peers!</p>
+        </div>
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-reward-filter="catalog">Catalog</button>
+          <button class="filter-tab" data-reward-filter="orders">My Orders</button>
+          <button class="filter-tab" data-reward-filter="history">History</button>
+        </div>
+        <div class="reward-content" id="rewardContent">
+          <div class="empty-state">
+            <span class="iconify" data-icon="mdi:gift-outline" data-width="48"></span>
+            <p>No rewards available yet</p>
+            <span>Check back soon!</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- LOST & FOUND -->
+      <section class="page" id="page-lostfound">
+        <h2>Lost & Found</h2>
+        <p class="subtitle" id="lfCount">0 items posted</p>
+        <div class="page-header-row" style="margin-top:1rem">
+          <div></div>
+          <button class="btn-primary btn-sm" id="addLfBtn">
+            <span class="iconify" data-icon="mdi:plus" data-width="18"></span> Post Item
+          </button>
+        </div>
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-lf-filter="all">All</button>
+          <button class="filter-tab" data-lf-filter="lost">Lost</button>
+          <button class="filter-tab" data-lf-filter="found">Found</button>
+        </div>
+        <div id="lfContent">
+          <div class="empty-state">
+            <span class="iconify" data-icon="mdi:map-marker-question-outline" data-width="48"></span>
+            <p>No items found</p>
+            <span>Post a lost or found item to get started</span>
+          </div>
+        </div>
+        <div class="modal-overlay" id="lfModal">
+          <div class="modal">
+            <div class="modal-header">
+              <h3>Post Item</h3>
+              <button class="modal-close" data-close="lfModal">
+                <span class="iconify" data-icon="mdi:close" data-width="20"></span>
+              </button>
+            </div>
+            <form id="lfForm">
+              <div class="form-group">
+                <label>Type</label>
+                <select id="lfType" required>
+                  <option value="lost">Lost</option>
+                  <option value="found">Found</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Item Name</label>
+                <input type="text" id="lfName" placeholder="e.g. Blue backpack" required/>
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea id="lfDesc" rows="3" placeholder="Describe the item..." required></textarea>
+              </div>
+              <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="lfLocation" placeholder="Where was it found/lost?"/>
+              </div>
+              <button type="submit" class="btn-primary" style="width:100%">Post Item</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHAT -->
+      <section class="page" id="page-chat">
+        <h2>Student Chat</h2>
+        <div class="chat-container">
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-msg received">
+              <div class="chat-avatar">A</div>
+              <div class="chat-bubble">Hey everyone! 👋</div>
+              <span class="chat-time">5:45 PM</span>
+            </div>
+            <div class="chat-msg sent">
+              <div class="chat-bubble">hi</div>
+              <span class="chat-time">5:46 PM</span>
+            </div>
+            <div class="chat-msg received">
+              <div class="chat-avatar">S</div>
+              <div class="chat-bubble">Has anyone started the SE assignment?</div>
+              <span class="chat-time">5:47 PM</span>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="Type a message..."/>
+            <button class="btn-primary btn-icon" id="chatSendBtn">
+              <span class="iconify" data-icon="mdi:send" data-width="20"></span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADMIN -->
+      <section class="page" id="page-admin">
+        <h2>Admin Dashboard</h2>
+        <div class="filter-tabs">
+          <button class="filter-tab active">Overview</button>
+          <button class="filter-tab">Users</button>
+          <button class="filter-tab">Settings</button>
+        </div>
+        <div class="stats-grid" style="margin-top:20px">
+          <div class="stat-card">
+            <div class="stat-icon blue"><span class="iconify" data-icon="mdi:account-group-outline" data-width="24"></span></div>
+            <div class="stat-value">7</div>
+            <div class="stat-label">Total Users</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple"><span class="iconify" data-icon="mdi:bullhorn-outline" data-width="24"></span></div>
+            <div class="stat-value">1</div>
+            <div class="stat-label">Announcements</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange"><span class="iconify" data-icon="mdi:shield-crown-outline" data-width="24"></span></div>
+            <div class="stat-value">2</div>
+            <div class="stat-label">Admins</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><span class="iconify" data-icon="mdi:access-point" data-width="24"></span></div>
+            <div class="stat-value">7</div>
+            <div class="stat-label">Active Today</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- SmartBot FAB -->
+  <button class="smartbot-fab" id="smartbotFab" title="SmartBot">
+    <span class="iconify" data-icon="mdi:robot-happy-outline" data-width="28"></span>
+  </button>
+
+  <!-- SmartBot Panel -->
+  <div class="smartbot-panel" id="smartbotPanel">
+    <div class="smartbot-header">
+      <div class="smartbot-title">
+        <span class="iconify" data-icon="mdi:robot-happy-outline" data-width="22"></span>
+        SmartBot
+      </div>
+      <button class="smartbot-close" id="smartbotClose">
+        <span class="iconify" data-icon="mdi:chevron-down" data-width="24"></span>
+      </button>
+    </div>
+    <div class="smartbot-messages" id="smartbotMessages">
+      <div class="bot-msg">
+        <p>👋 Hi! I'm SmartBot. How can I help you today?</p>
+      </div>
+      <div class="bot-suggestions">
+        <button class="bot-suggestion" data-q="What assignments are pending?">📋 Pending Assignments</button>
+        <button class="bot-suggestion" data-q="Show my timetable">📅 My Timetable</button>
+        <button class="bot-suggestion" data-q="Latest announcements">📢 Announcements</button>
+        <button class="bot-suggestion" data-q="How many credits do I have?">🎁 My Credits</button>
+      </div>
+    </div>
+    <div class="smartbot-input-row">
+      <input type="text" id="smartbotInput" placeholder="Ask me anything..."/>
+      <button class="btn-primary btn-icon" id="smartbotSendBtn">
+        <span class="iconify" data-icon="mdi:send" data-width="18"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // NAVIGATION
+    const navItems = document.querySelectorAll('.nav-item');
+    const pages = document.querySelectorAll('.page');
+    const pageTitle = document.getElementById('pageTitle');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebarClose = document.getElementById('sidebarClose');
+
+    function navigateTo(pageName) {
+      navItems.forEach(i => i.classList.remove('active'));
+      const a = document.querySelector('.nav-item[data-page="'+pageName+'"]');
+      if(a) a.classList.add('active');
+      pages.forEach(p => p.classList.remove('active'));
+      const pg = document.getElementById('page-'+pageName);
+      if(pg) pg.classList.add('active');
+      const titles = {dashboard:'Dashboard',assignments:'Assignments',notes:'Notes',timetable:'Timetable',announcements:'Announcements',tutorials:'Tutorial Hub',rewards:'Rewards',lostfound:'Lost & Found',chat:'Chat',admin:'Admin Dashboard'};
+      pageTitle.textContent = titles[pageName]||pageName;
+      closeSidebar();
+    }
+    navItems.forEach(item => { item.addEventListener('click',e => { e.preventDefault(); navigateTo(item.dataset.page); }); });
+
+    function openSidebar() { sidebar.classList.add('open'); sidebarOverlay.classList.add('active'); document.body.style.overflow='hidden'; }
+    function closeSidebar() { sidebar.classList.remove('open'); sidebarOverlay.classList.remove('active'); document.body.style.overflow=''; }
+    menuToggle.addEventListener('click',openSidebar);
+    sidebarClose.addEventListener('click',closeSidebar);
+    sidebarOverlay.addEventListener('click',closeSidebar);
+
+    // GREETING
+    (function(){
+      const h=new Date().getHours();
+      let g='Good Evening';
+      if(h<12)g='Good Morning'; else if(h<17)g='Good Afternoon';
+      const el=document.querySelector('.greeting h1');
+      if(el) el.innerHTML=g+', <span class="gradient-text">Nandakanuga</span>';
+    })();
+
+    // TOAST
+    function showToast(msg,type='info'){
+      const c=document.getElementById('toastContainer');
+      const t=document.createElement('div'); t.className='toast '+type;
+      const icons={success:'mdi:check-circle',error:'mdi:alert-circle',info:'mdi:information'};
+      t.innerHTML='<span class="iconify" data-icon="'+icons[type]+'" data-width="18"></span> '+msg;
+      c.appendChild(t); setTimeout(()=>t.remove(),3000);
+    }
+
+    // MODALS
+    document.querySelectorAll('[data-close]').forEach(b => { b.addEventListener('click',()=>{ document.getElementById(b.dataset.close).classList.remove('active'); }); });
+    document.querySelectorAll('.modal-overlay').forEach(o => { o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('active'); }); });
+
+    // ASSIGNMENTS
+    const assignmentsList=document.getElementById('assignmentsList');
+    const assignmentModal=document.getElementById('assignmentModal');
+    document.getElementById('addAssignmentBtn').addEventListener('click',()=>assignmentModal.classList.add('active'));
+
+    function updateAssCounts(){
+      const p=assignmentsList.querySelectorAll('.assignment-item.pending').length;
+      const c=assignmentsList.querySelectorAll('.assignment-item.completed').length;
+      const s=document.getElementById('assSubtitle');
+      if(s) s.textContent=p+' pending · '+c+' completed';
+    }
+
+    function setupAssItem(item){
+      item.addEventListener('click',e=>{
+        if(e.target.closest('.assignment-delete'))return;
+        if(item.dataset.status==='completed'){
+          item.dataset.status='pending'; item.className='assignment-item pending';
+          item.querySelector('.assignment-status').innerHTML='<span class="iconify" data-icon="mdi:clock-outline" data-width="22"></span>';
+        } else {
+          item.dataset.status='completed'; item.className='assignment-item completed';
+          item.querySelector('.assignment-status').innerHTML='<span class="iconify" data-icon="mdi:check-circle" data-width="22"></span>';
+          showToast('Assignment completed!','success');
+        }
+        updateAssCounts();
+      });
+      item.querySelector('.assignment-delete').addEventListener('click',()=>{ item.remove(); updateAssCounts(); showToast('Assignment deleted','info'); });
+    }
+    assignmentsList.querySelectorAll('.assignment-item').forEach(setupAssItem);
+
+    document.getElementById('assignmentForm').addEventListener('submit',e=>{
+      e.preventDefault();
+      const title=document.getElementById('assTitle').value;
+      const subject=document.getElementById('assSubject').value;
+      const date=document.getElementById('assDate').value;
+      const item=document.createElement('div');
+      item.className='assignment-item pending'; item.dataset.status='pending';
+      item.innerHTML='<div class="assignment-status"><span class="iconify" data-icon="mdi:clock-outline" data-width="22"></span></div><div class="assignment-info"><h4>'+title+'</h4><p>'+(subject||'No subject')+'</p><span class="assignment-date">'+date+'</span></div><button class="assignment-delete" title="Delete"><span class="iconify" data-icon="mdi:delete-outline" data-width="18"></span></button>';
+      setupAssItem(item);
+      assignmentsList.appendChild(item);
+      e.target.reset(); assignmentModal.classList.remove('active');
+      updateAssCounts(); showToast('Assignment added!','success');
+    });
+
+    // Assignment filters
+    document.querySelectorAll('.filter-tab[data-filter]').forEach(tab=>{
+      tab.addEventListener('click',()=>{
+        document.querySelectorAll('.filter-tab[data-filter]').forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        const f=tab.dataset.filter;
+        assignmentsList.querySelectorAll('.assignment-item').forEach(item=>{
+          item.style.display=(f==='all'||item.dataset.status===f)?'':'none';
+        });
+      });
+    });
+
+    // NOTES
+    const notesGrid=document.getElementById('notesGrid');
+    const noteModal=document.getElementById('noteModal');
+    document.getElementById('addNoteBtn').addEventListener('click',()=>noteModal.classList.add('active'));
+
+    function updateNotesCount(){
+      const n=notesGrid.querySelectorAll('.note-card').length;
+      const el=document.getElementById('notesCount');
+      if(el) el.textContent=n+' notes saved';
+    }
+
+    document.getElementById('noteForm').addEventListener('submit',e=>{
+      e.preventDefault();
+      const title=document.getElementById('noteTitle').value;
+      const content=document.getElementById('noteContent').value;
+      const now=new Date();
+      const ds=String(now.getMonth()+1).padStart(2,'0')+'/'+String(now.getDate()).padStart(2,'0')+'/'+now.getFullYear();
+      const card=document.createElement('div'); card.className='note-card';
+      card.innerHTML='<div class="note-header"><h4>'+title+'</h4><button class="note-delete" title="Delete"><span class="iconify" data-icon="mdi:delete-outline" data-width="16"></span></button></div><p class="note-content">'+content.replace(/\n/g,'<br/>')+'</p><span class="note-date">'+ds+'</span>';
+      card.querySelector('.note-delete').addEventListener('click',()=>{ card.remove(); updateNotesCount(); showToast('Note deleted','info'); });
+      notesGrid.appendChild(card);
+      e.target.reset(); noteModal.classList.remove('active');
+      updateNotesCount(); showToast('Note saved!','success');
+    });
+
+    notesGrid.querySelectorAll('.note-delete').forEach(b=>{
+      b.addEventListener('click',()=>{ b.closest('.note-card').remove(); updateNotesCount(); showToast('Note deleted','info'); });
+    });
+
+    // TUTORIALS FILTER
+    document.querySelectorAll('[data-tut-filter]').forEach(tab=>{
+      tab.addEventListener('click',()=>{
+        document.querySelectorAll('[data-tut-filter]').forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        const f=tab.dataset.tutFilter;
+        document.querySelectorAll('.tutorial-card').forEach(c=>{
+          c.classList.toggle('hidden',f!=='all'&&c.dataset.cat!==f);
+        });
+      });
+    });
+
+    // LOST & FOUND
+    let lfItems=[];
+    document.getElementById('addLfBtn').addEventListener('click',()=>document.getElementById('lfModal').classList.add('active'));
+
+    function renderLfItems(filter){
+      const filtered=filter==='all'?lfItems:lfItems.filter(i=>i.type===filter);
+      const el=document.getElementById('lfCount');
+      if(el) el.textContent=lfItems.length+' items posted';
+      const content=document.getElementById('lfContent');
+      if(filtered.length===0){
+        content.innerHTML='<div class="empty-state"><span class="iconify" data-icon="mdi:map-marker-question-outline" data-width="48"></span><p>No items found</p><span>Post a lost or found item to get started</span></div>';
+        return;
+      }
+      content.innerHTML=filtered.map(i=>'<div class="lf-item"><span class="lf-type-badge '+i.type+'">'+i.type+'</span><div class="lf-body"><h4>'+i.name+'</h4><p>'+i.desc+'</p>'+(i.location?'<span class="lf-location"><span class="iconify" data-icon="mdi:map-marker" data-width="14"></span> '+i.location+'</span>':'')+'</div></div>').join('');
+    }
+
+    document.querySelectorAll('[data-lf-filter]').forEach(tab=>{
+      tab.addEventListener('click',()=>{
+        document.querySelectorAll('[data-lf-filter]').forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        renderLfItems(tab.dataset.lfFilter);
+      });
+    });
+
+    document.getElementById('lfForm').addEventListener('submit',e=>{
+      e.preventDefault();
+      lfItems.push({type:document.getElementById('lfType').value,name:document.getElementById('lfName').value,desc:document.getElementById('lfDesc').value,location:document.getElementById('lfLocation').value});
+      renderLfItems('all'); e.target.reset();
+      document.getElementById('lfModal').classList.remove('active');
+      showToast('Item posted!','success');
+    });
+
+    // CHAT
+    const chatInput=document.getElementById('chatInput');
+    const chatMessages=document.getElementById('chatMessages');
+    function sendChat(){
+      const text=chatInput.value.trim(); if(!text)return;
+      const ts=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      const d=document.createElement('div'); d.className='chat-msg sent';
+      d.innerHTML='<div class="chat-bubble">'+text+'</div><span class="chat-time">'+ts+'</span>';
+      chatMessages.appendChild(d); chatInput.value=''; chatMessages.scrollTop=chatMessages.scrollHeight;
+      setTimeout(()=>{
+        const replies=["That's interesting! 🤔","I agree with you!","Has anyone checked the latest announcement?","Good luck with the assignment! 💪","See you at konnect 2k26! 🎉","Let's study together 📚","Nice one! 😄"];
+        const r=document.createElement('div'); r.className='chat-msg received';
+        r.innerHTML='<div class="chat-avatar">'+['A','S','M','K'][Math.floor(Math.random()*4)]+'</div><div class="chat-bubble">'+replies[Math.floor(Math.random()*replies.length)]+'</div><span class="chat-time">'+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</span>';
+        chatMessages.appendChild(r); chatMessages.scrollTop=chatMessages.scrollHeight;
+      },1000+Math.random()*1500);
+    }
+    document.getElementById('chatSendBtn').addEventListener('click',sendChat);
+    chatInput.addEventListener('keypress',e=>{ if(e.key==='Enter')sendChat(); });
+
+    // SMARTBOT
+    const smartbotFab=document.getElementById('smartbotFab');
+    const smartbotPanel=document.getElementById('smartbotPanel');
+    const smartbotInput=document.getElementById('smartbotInput');
+    const smartbotMessages=document.getElementById('smartbotMessages');
+
+    smartbotFab.addEventListener('click',()=>{ smartbotFab.classList.add('hidden'); smartbotPanel.classList.add('active'); });
+    document.getElementById('smartbotClose').addEventListener('click',()=>{ smartbotPanel.classList.remove('active'); smartbotFab.classList.remove('hidden'); });
+
+    function getBotReply(text){
+      const l=text.toLowerCase();
+      if(l.includes('assignment')||l.includes('pending')){
+        const p=document.querySelectorAll('.assignment-item.pending').length;
+        const c=document.querySelectorAll('.assignment-item.completed').length;
+        return '📋 You have <strong>'+p+' pending</strong> and <strong>'+c+' completed</strong> assignments.';
+      }
+      if(l.includes('timetable')||l.includes('schedule')) return '📅 Your next class is scheduled. Check the <strong>Timetable</strong> page for details!';
+      if(l.includes('announcement')||l.includes('notice')) return '📢 Latest announcement: <strong>konnect 2k26</strong> — fest in our college!';
+      if(l.includes('credit')||l.includes('reward')) return '🎁 Your credit balance is <strong>15</strong> (lifetime earned: 15). Keep completing tasks to earn more!';
+      if(l.includes('hello')||l.includes('hi')||l.includes('hey')) return '👋 Hey there! How can I help you today?';
+      return '🤔 I can help with assignments, timetable, announcements, and rewards. Try asking about those!';
+    }
+
+    function sendBotMsg(text){
+      if(!text.trim())return;
+      const ud=document.createElement('div'); ud.className='bot-msg user-msg'; ud.textContent=text;
+      smartbotMessages.appendChild(ud);
+      const sg=smartbotMessages.querySelector('.bot-suggestions'); if(sg)sg.remove();
+      setTimeout(()=>{
+        const bd=document.createElement('div'); bd.className='bot-msg'; bd.innerHTML=getBotReply(text);
+        smartbotMessages.appendChild(bd); smartbotMessages.scrollTop=smartbotMessages.scrollHeight;
+      },600);
+    }
+
+    document.getElementById('smartbotSendBtn').addEventListener('click',()=>{ sendBotMsg(smartbotInput.value); smartbotInput.value=''; });
+    smartbotInput.addEventListener('keypress',e=>{ if(e.key==='Enter'){ sendBotMsg(smartbotInput.value); smartbotInput.value=''; } });
+    document.querySelectorAll('.bot-suggestion').forEach(b=>{ b.addEventListener('click',()=>sendBotMsg(b.dataset.q)); });
+
+    // NOTIFICATION
+    document.getElementById('notifBtn').addEventListener('click',()=>showToast('1 new announcement: konnect 2k26','info'));
+
+    // REWARD FILTERS
+    document.querySelectorAll('[data-reward-filter]').forEach(tab=>{
+      tab.addEventListener('click',()=>{
+        document.querySelectorAll('[data-reward-filter]').forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        const f=tab.dataset.rewardFilter;
+        const rc=document.getElementById('rewardContent');
+        if(f==='catalog') rc.innerHTML='<div class="empty-state"><span class="iconify" data-icon="mdi:gift-outline" data-width="48"></span><p>No rewards available yet</p><span>Check back soon!</span></div>';
+        else if(f==='orders') rc.innerHTML='<div class="empty-state"><span class="iconify" data-icon="mdi:package-variant" data-width="48"></span><p>No orders yet</p><span>Redeem credits to get rewards!</span></div>';
+        else rc.innerHTML='<div class="empty-state"><span class="iconify" data-icon="mdi:history" data-width="48"></span><p>No history</p><span>Your activity will appear here</span></div>';
+      });
+    });
+  </script>
+</body>
+</html>
